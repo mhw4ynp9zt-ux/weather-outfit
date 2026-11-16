@@ -2,7 +2,6 @@
 const CACHE = 'wo-shell-v1';
 const SHELL = [
   './',
-  './index.html',
   './style.css',
   './app.js',
   './lib/outfit.js',
@@ -15,7 +14,7 @@ const SHELL = [
 ];
 
 self.addEventListener('install', (e) => {
-  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL)).then(() => self.skipWaiting()));
+  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL.map((u) => new Request(u, { cache: 'reload' })))).then(() => self.skipWaiting()));
 });
 
 self.addEventListener('activate', (e) => {
@@ -29,5 +28,14 @@ self.addEventListener('activate', (e) => {
 self.addEventListener('fetch', (e) => {
   const url = new URL(e.request.url);
   if (e.request.method !== 'GET' || url.origin !== self.location.origin) return; // 別オリジン(Open-Meteo)は触らない
-  e.respondWith(caches.match(e.request).then((hit) => hit || fetch(e.request)));
+  // stale-while-revalidate: 先にキャッシュを返し、裏で最新を取得して次回に反映する
+  e.respondWith(
+    caches.open(CACHE).then((c) => c.match(e.request, { ignoreSearch: true }).then((hit) => {
+      const net = fetch(e.request).then((res) => {
+        if (res.ok && !res.redirected) c.put(e.request, res.clone());
+        return res;
+      }).catch(() => hit);
+      return hit || net;
+    })),
+  );
 });

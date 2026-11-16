@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { renderTabs, renderDay, renderBanner, weatherIcon } from '../lib/render.js';
 
 const slot = (o = {}) => ({
-  label: '朝', tempC: 9, feelsLikeC: 8, precipProb: 10, windMs: 2, uv: 0, isPast: false, ...o,
+  label: '朝', tempC: 9, feelsLikeC: 8, precipProb: 10, windMs: 2, uv: 0, endAt: 4102444800000, ...o,
 });
 const day = (i, o = {}) => ({
   date: `2026-11-${String(17 + i).padStart(2, '0')}`,
@@ -24,12 +24,12 @@ test('renderTabs: 7タブ、選択中だけaria-selected、気温幅とアイコ
 test('renderDay: 朝昼夜とまとめ、過去と欠測の表示', () => {
   const d = day(0, {
     slots: [
-      slot({ label: '朝', isPast: true }),
+      slot({ label: '朝', endAt: 0 }),
       slot({ label: '昼', feelsLikeC: null, tempC: null }),
       slot({ label: '夜' }),
     ],
   });
-  const html = renderDay(d, 'hot');
+  const html = renderDay(d, 'hot', 1000);
   for (const l of ['朝', '昼', '夜']) assert.ok(html.includes(l));
   assert.ok(html.includes('class="slot past"'));
   assert.ok(html.includes('データなし'));
@@ -41,6 +41,7 @@ test('renderDay: 日付の曜日表記', () => {
 });
 
 test('renderBanner', () => {
+  assert.ok(renderBanner('cached', '2026-11-16T09:00:00.000Z', '東京').includes('東京'));
   assert.ok(renderBanner('cached', '2026-11-16T09:00:00.000Z').includes('保存した予報です'));
   assert.equal(renderBanner('none'), '');
   assert.ok(renderBanner('error', '通信に失敗しました').includes('通信に失敗しました'));

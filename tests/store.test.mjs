@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { DEFAULT_SETTINGS, loadSettings, saveSettings, loadCache, saveCache } from '../lib/store.js';
+import { safeStorage, DEFAULT_SETTINGS, loadSettings, saveSettings, loadCache, saveCache } from '../lib/store.js';
 
 function memStorage(initial = {}) {
   const m = new Map(Object.entries(initial));
@@ -46,4 +46,14 @@ test('saveCache→loadCache、未保存はnull', () => {
   assert.deepEqual(c.days, days);
   assert.deepEqual(c.place, DEFAULT_SETTINGS.place);
   assert.equal(c.savedAt, '2026-11-16T09:00:00.000Z');
+});
+
+test('safeStorage: localStorageへのアクセス自体が例外でも動くメモリ代替を返す', () => {
+  const win = { get localStorage() { throw new Error('SecurityError'); } };
+  const st = safeStorage(win);
+  st.setItem('a', '1');
+  assert.equal(st.getItem('a'), '1');
+  assert.equal(st.getItem('zzz'), null);
+  const ok = { localStorage: memStorage() };
+  assert.equal(safeStorage(ok), ok.localStorage);
 });

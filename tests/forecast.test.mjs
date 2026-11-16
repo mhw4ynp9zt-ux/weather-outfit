@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { buildDays, fetchForecast, geocode, DEFAULT_SLOTS } from '../lib/forecast.js';
+import { buildDays, fetchForecast, geocode, filterUpcoming, DEFAULT_SLOTS } from '../lib/forecast.js';
 
 // 2日分(各日0〜23時)のOpen-Meteo形式フィクスチャ
 function makeApi(overrides = {}) {
@@ -18,6 +18,7 @@ function makeApi(overrides = {}) {
     }
   }
   return {
+    utc_offset_seconds: 32400,
     hourly: { time, ...h, ...overrides.hourly },
     daily: {
       time: ['2026-11-17', '2026-11-18'],
@@ -52,11 +53,19 @@ test('buildDays: nullを除いて平均、全部nullならnull', () => {
   assert.equal(days[0].slots[1].precipProb, null);
 });
 
-test('buildDays: isPast', () => {
-  const days = buildDays(makeApi(), DEFAULT_SLOTS, new Date('2026-11-17T10:00:00'));
-  assert.equal(days[0].slots[0].isPast, true);
-  assert.equal(days[0].slots[2].isPast, false);
-  assert.equal(days[1].slots[0].isPast, false);
+test('buildDays: endAtは場所の現地時間(utc_offset)基準', () => {
+  const days = buildDays(makeApi(), DEFAULT_SLOTS, new Date());
+  assert.equal(days[0].slots[0].endAt, Date.parse('2026-11-17T09:59:59+09:00'));
+  const ny = makeApi(); ny.utc_offset_seconds = -18000;
+  assert.equal(buildDays(ny)[0].slots[0].endAt, Date.parse('2026-11-17T09:59:59-05:00'));
+  assert.equal(days[0].endAt, Date.parse('2026-11-17T23:59:59+09:00'));
+});
+
+test('filterUpcoming: 過ぎた日を除く(今日は残す)', () => {
+  const days = buildDays(makeApi());
+  const now = Date.parse('2026-11-18T08:00:00+09:00');
+  assert.deepEqual(filterUpcoming(days, now).map((d) => d.date), ['2026-11-18']);
+  assert.equal(filterUpcoming(days, Date.parse('2026-11-17T23:00:00+09:00')).length, 2);
 });
 
 test('fetchForecast: URLパラメータとエラー', async () => {

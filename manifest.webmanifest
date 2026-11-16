@@ -2,7 +2,7 @@
   "name": "今日なに着る?",
   "short_name": "なに着る",
   "description": "天気予報から、朝・昼・夜の服装を提案します",
-  "start_url": "./index.html",
+  "start_url": "./",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
