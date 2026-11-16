@@ -79,3 +79,9 @@ test('geocode: 0件は[]、あれば変換', async () => {
   assert.deepEqual(r, [{ name: '大阪市', lat: 34.69, lon: 135.5 }]);
   await assert.rejects(geocode('x', async () => ({ ok: false, status: 500 })));
 });
+
+test('fetchForecast: 時間帯設定を反映する', async () => {
+  const ok = async () => ({ ok: true, json: async () => makeApi() });
+  const days = await fetchForecast(35.6, 139.7, ok, { 朝: [6, 6], 昼: [12, 15], 夜: [18, 22] });
+  assert.equal(days[0].slots[0].tempC, 6);
+});
