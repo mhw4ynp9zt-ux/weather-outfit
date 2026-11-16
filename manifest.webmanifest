@@ -1,0 +1,16 @@
+{
+  "name": "今日なに着る?",
+  "short_name": "なに着る",
+  "description": "天気予報から、朝・昼・夜の服装を提案します",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "lang": "ja",
+  "theme_color": "#2f6fed",
+  "background_color": "#f6f8fc",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+  ]
+}
